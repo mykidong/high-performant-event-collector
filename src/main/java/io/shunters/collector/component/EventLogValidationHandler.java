@@ -64,13 +64,13 @@ public class EventLogValidationHandler implements
         String version = eventLog.getVersion();
         String json = eventLog.getValue();
 
-        // EventLog Log Version 에 맞게 Validation
+        // Validation
         if (eventLogValidationEnabled) {
             try {
                 Map<String, Object> map = JsonUtils.toMap(mapper, json);
 
-                // version 7.0 validation.
-                if (version.equals("7.0")) {
+                // version 1.0.0 validation.
+                if (version.equals("1.0.0")) {
                     if (!evenValidator.isValid(map)) {
 
                         return;

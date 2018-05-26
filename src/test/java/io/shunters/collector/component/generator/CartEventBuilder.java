@@ -30,7 +30,7 @@ public class CartEventBuilder implements EventBuilder {
     private String buildJsonEvent(int count) {
         BaseProperties baseProperties = new BaseProperties();
         baseProperties.setEventType("cart-event");
-        baseProperties.setVersion("7.0");
+        baseProperties.setVersion("1.0.0");
         baseProperties.setUid("any-uid" + count);
         baseProperties.setTs(new Date().getTime());
 
