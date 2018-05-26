@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:c="http://www.springframework.org/schema/c"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.2.xsd">
+
+		
+	<bean id="eventLogValidationHandler" class="io.shunters.collector.component.EventLogValidationHandler"
+		p:produceToKafkaHandler-ref="produceToKafkaHandler"
+		p:loggerEventHandler-ref="loggerEventHandler"
+		p:eventLogValidationEnabled="${eventLogValidationEnabled}"
+		p:evenValidator-ref="eventValidatorV7_0"/>
+
+	<bean id="eventValidatorV7_0" class="io.shunters.collector.component.validation.EventValidatorForAnyVersion" />
+
+
+	<bean id="produceToKafkaHandler" class="io.shunters.collector.component.ProduceToKafkaHandler"
+		  p:metricRegistry-ref="metricRegistryFactory"
+		  p:producer-ref="kafkaProducerFactory"
+		  p:sendMessageEnabled="${producer.send.enabled}"
+		  p:topicName="${producer.topicName}"/>
+
+
+	<bean id="loggerEventHandler" class="io.shunters.collector.component.LoggerEventHandler"
+		  p:metricRegistry-ref="metricRegistryFactory"
+		  p:eventLoggingEnabled="${eventLoggingEnabled}"/>
+
+
+	<bean id="kafkaProducerFactory" class="io.shunters.collector.component.KafkaProducerFactory"
+		p:kafkaProp-ref="kafkaProp" />
+
+	<util:properties id="kafkaProp">
+		<prop key="bootstrap.servers">${bootstrap.servers}</prop>
+		<prop key="acks">${acks}</prop>
+		<prop key="retries">${retries}</prop>
+		<prop key="batch.size">${batch.size}</prop>
+		<prop key="linger.ms">${linger.ms}</prop>
+		<prop key="buffer.memory">${buffer.memory}</prop>
+		<prop key="key.serializer">${key.serializer}</prop>
+		<prop key="value.serializer">${value.serializer}</prop>
+		<prop key="compression.type">${compression.type}</prop>
+	</util:properties>
+	
+	<bean id="metricRegistryFactory"
+		class="io.shunters.collector.component.metrics.MetricRegistryFactory" />
+		
+	<bean id="jMXMetricsReporter"
+		class="io.shunters.collector.component.metrics.JMXMetricsReporter"
+		p:metricRegistry-ref="metricRegistryFactory" />	
+
+
+	<bean id="graphiteMetricsReporter"
+		class="io.shunters.collector.component.metrics.GraphiteMetricsReporter"
+		p:metricRegistry-ref="metricRegistryFactory"
+		p:carbonHost="${carbon.host}"
+		p:carbonPort="${carbon.port}" 
+		p:prefix="${graphite.prefix}"
+	    p:hostNameIncluded="${graphite.hostNameIncluded}"/>
+
+
+	<bean id="systemOutReporter" class="io.shunters.collector.component.metrics.SystemOutReporter"
+		  p:metricRegistry-ref="metricRegistryFactory" />
+
+</beans>
