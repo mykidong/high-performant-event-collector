@@ -11,6 +11,7 @@
 		p:httpRequestHandler-ref="httpRequestHandler"
 		p:threadSize="${http.threadSize}"
 		p:workerPoolSize="${http.workerPoolSize}"
+		p:verticleCount="${http.verticleCount}"
 		p:port="${http.port}" />
 	
 	<bean id="httpRequestHandler" class="io.shunters.collector.component.HttpRequestHandler"

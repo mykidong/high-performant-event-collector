@@ -7,6 +7,9 @@
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
 		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.2.xsd">
 
+	<!-- application context aware bean -->
+	<bean id="springContext" class="io.shunters.collector.util.SpringContext" />
+
 		
 	<bean id="eventLogValidationHandler" class="io.shunters.collector.component.EventLogValidationHandler"
 		p:produceToKafkaHandler-ref="produceToKafkaHandler"

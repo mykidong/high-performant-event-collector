@@ -66,6 +66,11 @@ public class SimpleEventGenerator {
                 HttpClientRequest request = client.post(HttpRequestHandler.EVENT_URI,
                         new Handler<HttpClientResponse>() {
                             public void handle(HttpClientResponse resp) {
+                                resp.bodyHandler(buffer -> {
+
+                                    log.info("response: [{}]", buffer.toString());
+
+                                });
                             }
                         });
 

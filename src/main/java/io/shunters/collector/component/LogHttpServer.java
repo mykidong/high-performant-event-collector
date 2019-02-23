@@ -1,11 +1,9 @@
 package io.shunters.collector.component;
 
+import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
-import io.vertx.core.http.HttpServer;
-import io.vertx.core.http.HttpServerOptions;
-import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,17 +15,23 @@ public class LogHttpServer implements InitializingBean, DisposableBean {
 
     private static Logger log = LoggerFactory.getLogger(LogHttpServer.class);
 
-    private HttpServer server;
+    private Vertx vertx;
 
-    private int port;
+    protected int port;
 
-    private Handler<RoutingContext> httpRequestHandler;
+    protected Handler<RoutingContext> httpRequestHandler;
 
-    private int threadSize;
+    protected int threadSize;
 
-    private int workerPoolSize;
+    protected int workerPoolSize;
 
-    private int idleTimeoutInSeconds;
+    protected int idleTimeoutInSeconds;
+
+    protected int verticleCount;
+
+    public void setVerticleCount(int verticleCount) {
+        this.verticleCount = verticleCount;
+    }
 
     public void setIdleTimeoutInSeconds(int idleTimeoutInSeconds) {
         this.idleTimeoutInSeconds = idleTimeoutInSeconds;
@@ -49,33 +53,36 @@ public class LogHttpServer implements InitializingBean, DisposableBean {
         this.httpRequestHandler = httpRequestHandler;
     }
 
-    @Override
-    public void destroy() throws Exception {
-        this.server.close();
-    }
 
     @Override
     public void afterPropertiesSet() throws Exception {
+        DeploymentOptions deploymentOptions = new DeploymentOptions();
+        deploymentOptions.setInstances(verticleCount);
+        deploymentOptions.setWorkerPoolSize(workerPoolSize);
+        deploymentOptions.setWorker(true);
+
         VertxOptions vertxOptions = new VertxOptions();
         vertxOptions.setMaxEventLoopExecuteTime(Long.MAX_VALUE);
-        vertxOptions.setEventLoopPoolSize(this.threadSize);
-        vertxOptions.setWorkerPoolSize(this.workerPoolSize);
+        vertxOptions.setEventLoopPoolSize(threadSize);
+        vertxOptions.setWorkerPoolSize(workerPoolSize);
 
-        Vertx vertx = Vertx.vertx(vertxOptions);
+        vertx = Vertx.vertx(vertxOptions);
 
-        HttpServerOptions httpServerOptions = new HttpServerOptions();
-        httpServerOptions.setSendBufferSize(100 * 1024);
-        httpServerOptions.setReceiveBufferSize(100 * 1024);
-        httpServerOptions.setAcceptBacklog(10000);
-        httpServerOptions.setIdleTimeout(idleTimeoutInSeconds);
+        // run http server verticles.
+        vertx.deployVerticle("io.shunters.collector.component.HttpServerVerticle", deploymentOptions, ar -> {
+            if(ar.succeeded())
+            {
+                log.info("http server verticles deployed completely...");
+            }
+            else
+            {
+                log.error("something wrong: " + ar.cause().toString());
+            }
+        });
+    }
 
-        Router router = Router.router(vertx);
-
-        router.route(HttpRequestHandler.EVENT_URI).handler(this.httpRequestHandler);
-
-        this.server = vertx.createHttpServer(httpServerOptions);
-        server.requestHandler(router::accept).listen(port);
-
-        log.info("http server is listening on " + port);
+    @Override
+    public void destroy() throws Exception {
+        vertx.close();
     }
 }
